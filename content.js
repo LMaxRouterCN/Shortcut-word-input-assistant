@@ -84,9 +84,10 @@ function createSidebar(settings) {
         <span class="slider"></span>
       </label>
     </div>
+    <button class="sidebar-button" id="reselect-input-button">重新选择输入框</button>
   `;
   
-  // 添加切换事件
+  // 添加自动发送切换事件
   const toggle = sidebar.querySelector('#auto-send-toggle');
   toggle.addEventListener('change', function() {
     chrome.storage.sync.set({autoSend: this.checked}, () => {
@@ -94,6 +95,21 @@ function createSidebar(settings) {
         currentSettings.autoSend = this.checked;
       }
     });
+  });
+  
+  // 添加重新选择输入框按钮事件
+  const reselectButton = sidebar.querySelector('#reselect-input-button');
+  reselectButton.addEventListener('click', () => {
+    // 清除当前选择的输入框
+    selectedInput = null;
+    
+    // 显示选择按钮
+    showSelectButton();
+    
+    // 进入选择模式
+    if (!isSelecting) {
+      toggleSelectMode();
+    }
   });
   
   return sidebar;
@@ -358,7 +374,7 @@ function setupDragging(element) {
 function toggleSelectMode(e) {
   // 防止拖拽时触发选择模式
   if (isDragging) {
-    e.stopPropagation();
+    e && e.stopPropagation();
     return;
   }
   
@@ -385,7 +401,9 @@ function toggleSelectMode(e) {
     document.removeEventListener('click', handleInputSelection, true);
   }
   
-  e.stopPropagation();
+  if (e) {
+    e.stopPropagation();
+  }
 }
 
 // 添加输入框高亮样式
