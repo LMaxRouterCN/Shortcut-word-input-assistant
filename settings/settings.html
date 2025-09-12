@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>快捷词设置</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="container">
+    <h1>快捷词设置</h1>
+    
+    <div class="section">
+      <h2>启用网址(白名单)</h2>
+      <p>只有在白名单中的网址才会显示快捷词框</p>
+      <div class="whitelist-container">
+        <input type="text" id="whitelist-input" placeholder="输入网址(如: example.com)">
+        <button id="add-whitelist">添加</button>
+      </div>
+      <ul id="whitelist"></ul>
+    </div>
+    
+    <div class="section">
+      <h2>快捷词</h2>
+      <p>每行一个快捷词</p>
+      <textarea id="keywords-input" placeholder="请输入快捷词，每行一个"></textarea>
+    </div>
+    
+    <div class="section">
+      <h2>待选框设置</h2>
+      
+      <div class="form-group">
+        <label for="box-width">宽度:</label>
+        <div class="range-input-group">
+          <input type="range" id="box-width-range" min="100" max="500" value="200">
+          <input type="number" id="box-width" min="100" max="500" value="200">
+          <span>px</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="box-height">高度:</label>
+        <div class="range-input-group">
+          <input type="range" id="box-height-range" min="100" max="500" value="300">
+          <input type="number" id="box-height" min="100" max="500" value="300">
+          <span>px</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="box-color">背景颜色:</label>
+        <input type="color" id="box-color">
+      </div>
+      
+      <div class="form-group">
+        <label for="border-color">边框颜色:</label>
+        <input type="color" id="border-color">
+      </div>
+      
+      <div class="form-group">
+        <label for="border-radius">圆角程度:</label>
+        <div class="range-input-group">
+          <input type="range" id="border-radius" min="0" max="20" value="8">
+          <span id="border-radius-value">8px</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="opacity">透明度:</label>
+        <div class="range-input-group">
+          <input type="range" id="opacity" min="0.1" max="1" step="0.1" value="0.9">
+          <span id="opacity-value">90%</span>
+        </div>
+      </div>
+      
+      <div class="switch-group">
+        <label for="hide-button">选择后隐藏按钮:</label>
+        <label class="switch">
+          <input type="checkbox" id="hide-button" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button id="save">保存设置</button>
+      <button id="reset">恢复默认</button>
+    </div>
+  </div>
+  
+  <script src="settings.js"></script>
+</body>
+</html>

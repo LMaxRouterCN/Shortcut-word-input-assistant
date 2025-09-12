@@ -1,0 +1,248 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+    color: #333;
+    min-width: 500px;
+  }
+  
+  .container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  h1 {
+    margin-top: 0;
+    color: #4a90e2;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  h2 {
+    margin-top: 20px;
+    color: #555;
+  }
+  
+  .section {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .section:last-child {
+    border-bottom: none;
+  }
+  
+  .whitelist-container {
+    display: flex;
+    margin-bottom: 10px;
+  }
+  
+  .whitelist-container input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+  
+  .whitelist-container button {
+    padding: 8px 15px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .whitelist-container button:hover {
+    background-color: #357abD;
+  }
+  
+  #whitelist {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  #whitelist li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    margin-bottom: 5px;
+  }
+  
+  #whitelist li button {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+  
+  #keywords-input {
+    width: 100%;
+    height: 120px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+  
+  .form-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    width: 120px;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+  
+  .range-input-group {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    gap: 10px;
+  }
+  
+  .range-input-group input[type="range"] {
+    flex-grow: 1;
+  }
+  
+  .range-input-group input[type="number"] {
+    width: 70px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+  }
+  
+  .form-group input[type="color"] {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    height: 30px;
+    width: 60px;
+  }
+  
+  .switch-group {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .switch-group label:first-child {
+    width: auto;
+    margin-right: 15px;
+  }
+  
+  /* 改进的开关样式 */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+  }
+  
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 30px;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  input:checked + .slider {
+    background-color: #4a90e2;
+  }
+  
+  input:checked + .slider:before {
+    transform: translateX(30px);
+  }
+  
+  /* 添加开关状态文本 */
+  .slider:after {
+    content: "关";
+    color: white;
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  input:checked + .slider:after {
+    content: "开";
+    left: 10px;
+    right: auto;
+  }
+  
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  #save {
+    background-color: #4a90e2;
+    color: white;
+  }
+  
+  #save:hover {
+    background-color: #357abD;
+  }
+  
+  #reset {
+    background-color: #f0f0f0;
+    color: #333;
+  }
+  
+  #reset:hover {
+    background-color: #e0e0e0;
+  }

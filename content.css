@@ -1,0 +1,36 @@
+/* 内容脚本的样式 */
+#quick-word-box {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    resize: both;
+    min-width: 150px;
+    min-height: 200px;
+  }
+  
+  #quick-word-box button {
+    transition: background-color 0.2s;
+  }
+  
+  #quick-word-box button:hover {
+    background-color: #f0f0f0 !important;
+  }
+  
+  /* 防止文本选择 */
+  #quick-word-box {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  #keywords-container, #keywords-container button {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* 添加拖拽区域样式 */
+  #quick-word-box.dragging {
+    cursor: grabbing !important;
+  }
