@@ -1,36 +1,145 @@
 /* 内容脚本的样式 */
 #quick-word-box {
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    resize: both;
-    min-width: 150px;
-    min-height: 200px;
-  }
-  
-  #quick-word-box button {
-    transition: background-color 0.2s;
-  }
-  
-  #quick-word-box button:hover {
-    background-color: #f0f0f0 !important;
-  }
-  
-  /* 防止文本选择 */
-  #quick-word-box {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-  
-  #keywords-container, #keywords-container button {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-  
-  /* 添加拖拽区域样式 */
-  #quick-word-box.dragging {
-    cursor: grabbing !important;
-  }
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  resize: both;
+  min-width: 150px;
+  min-height: 200px;
+}
+
+#quick-word-box button {
+  transition: background-color 0.2s;
+}
+
+#quick-word-box button:hover {
+  background-color: #f0f0f0 !important;
+}
+
+/* 防止文本选择 */
+#quick-word-box,
+#keywords-container, 
+#keywords-container button {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 添加拖拽区域样式 */
+#quick-word-box.dragging {
+  cursor: grabbing !important;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+  position: absolute;
+  right: -160px;
+  top: 0;
+  width: 160px;
+  height: 100%;
+  background-color: #f9f9f9;
+  border-left: 1px solid #ddd;
+  border-radius: 0 8px 8px 0;
+  padding: 10px;
+  box-sizing: border-box;
+  transition: right 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  z-index: 10001;
+}
+
+#quick-word-box:hover .sidebar {
+  right: 0;
+}
+
+.sidebar-title {
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #333;
+}
+
+.setting-item {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.setting-label {
+  flex: 1;
+  font-size: 12px;
+  color: #555;
+}
+
+/* 开关样式 */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* 侧边栏触发器 */
+.sidebar-trigger {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 50px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-right: none;
+  border-radius: 5px 0 0 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+}
+
+.sidebar-trigger-icon {
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid #999;
+  border-right: 2px solid #999;
+  transform: rotate(45deg);
+}
