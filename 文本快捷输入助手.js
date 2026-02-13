@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         文本快捷输入助手
 // @namespace    http://tampermonkey.net/
-// @version      4.5
-// @description  
+// @version      4.9
+// @description
 // @author       LMaxRouterCN
 // @match        *://*/*
 // @grant        GM_setValue
@@ -18,8 +18,9 @@
         runOnAllSites: false,
         whiteList: ["localhost", "127.0.0.1", "example.com"],
         headerPosition: 'top',
-        autoCollapse: false,       // 自动折叠开关
-        autoCollapseDelay: 300,    // 新增：自动折叠延迟时间(毫秒)
+        autoCollapse: false,
+        autoCollapseDelay: 300,
+        autoEnter: false,
         phrases: [
             { name: "邮箱", content: "myemail@example.com" },
             { name: "手机号", content: "13800138000" },
@@ -36,30 +37,76 @@
             btnBgColor: "#e8f4ff",
             btnTextColor: "#0052cc",
             btnBorderColor: "#b6d4fe"
-        },
-        position: { top: 100, left: null, right: 20 }
+        }
     };
 
     // ================= 工具函数 =================
-    function loadConfig() {
+
+    const currentHost = window.location.hostname;
+
+    function loadGlobalConfig() {
         const saved = GM_getValue('quick_input_config');
         if (!saved) return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
         try {
             const cfg = { ...DEFAULT_CONFIG, ...saved };
             cfg.style = { ...DEFAULT_CONFIG.style, ...(saved.style || {}) };
-            cfg.position = { ...DEFAULT_CONFIG.position, ...(saved.position || {}) };
             return cfg;
         } catch (e) { return JSON.parse(JSON.stringify(DEFAULT_CONFIG)); }
     }
 
-    function saveConfig(config) { GM_setValue('quick_input_config', config); }
+    function loadSiteLayout() {
+        const key = `qip_layout_${currentHost}`;
+        const saved = GM_getValue(key);
+        if (saved) {
+            return {
+                left: saved.left,
+                top: saved.top,
+                width: saved.width,
+                height: saved.height
+            };
+        }
+        return null;
+    }
 
-    let config = loadConfig();
+    function saveGlobalConfig(config) {
+        const dataToSave = {
+            runOnAllSites: config.runOnAllSites,
+            whiteList: config.whiteList,
+            headerPosition: config.headerPosition,
+            autoCollapse: config.autoCollapse,
+            autoCollapseDelay: config.autoCollapseDelay,
+            autoEnter: config.autoEnter,
+            phrases: config.phrases,
+            style: config.style
+        };
+        GM_setValue('quick_input_config', dataToSave);
+    }
+
+    function saveSiteLayout(layout) {
+        const key = `qip_layout_${currentHost}`;
+        GM_setValue(key, {
+            left: layout.left,
+            top: layout.top,
+            width: layout.width,
+            height: layout.height
+        });
+    }
+
+    let config = loadGlobalConfig();
+    const siteLayout = loadSiteLayout();
+    if (siteLayout) {
+        config.position = { top: siteLayout.top, left: siteLayout.left };
+        config.style.width = siteLayout.width;
+        config.style.height = siteLayout.height;
+    } else {
+        config.position = { top: 100, left: null, right: 20 };
+    }
+
     let panelInstance = null;
     let targetElement = null;
     let styleElement = null;
+    let isInitialized = false;
 
-    // ================= 域名匹配 =================
     function isHostAllowed(hostname, whiteList) {
         if (config.runOnAllSites) return true;
         return whiteList.some(domain => {
@@ -78,7 +125,6 @@
         const animSpeed = (config.style.animationSpeed !== undefined ? config.style.animationSpeed : 0.25);
 
         styleElement.textContent = `
-            /* === 基础面板样式 === */
             #quick-input-panel {
                 position: fixed;
                 background: ${config.style.bgColor};
@@ -100,13 +146,11 @@
                     left ${animSpeed}s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
-            /* === 布局方向控制 === */
             .qip-layout-top { flex-direction: column; justify-content: flex-start; }
             .qip-layout-bottom { flex-direction: column; justify-content: flex-end; }
             .qip-layout-left { flex-direction: row; justify-content: flex-start; }
             .qip-layout-right { flex-direction: row; justify-content: flex-end; }
 
-            /* === Header 样式 === */
             .qip-header {
                 display: flex;
                 justify-content: space-between;
@@ -148,7 +192,6 @@
             }
             .qip-actions button:hover { color: #000; }
 
-            /* === Body 样式 === */
             .qip-body {
                 padding: 10px;
                 flex: 1;
@@ -158,17 +201,12 @@
                 min-height: 0;
                 transition: padding 0s;
             }
-            .qip-layout-left .qip-body, .qip-layout-right .qip-body {
-                width: 180px;
-                height: auto;
-            }
+            .qip-layout-left .qip-body, .qip-layout-right .qip-body { width: 180px; height: auto; }
 
-            /* 内容对齐逻辑 */
             .qip-layout-top .qip-body { display: flex; flex-direction: column; justify-content: flex-end; }
             .qip-layout-left .qip-body { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; }
             .qip-layout-left .qip-btn { width: auto; min-width: 80%; }
 
-            /* === 调整大小手柄 === */
             .qip-resize { position: absolute; background: transparent; z-index: 10; display: block; width: 8px; height: 8px; }
             #quick-input-panel.is-collapsed .qip-resize { display: none; }
             .qip-resize-top    { top: -2px; left: 10px; right: 10px; width: auto; height: 5px; cursor: n-resize; }
@@ -200,7 +238,6 @@
                 writing-mode: vertical-rl; text-align: left;
             }
 
-            /* === 设置面板样式 === */
             .qip-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2147483647; display: flex; justify-content: center; align-items: center; }
             .qip-modal { background: #fff; width: 500px; max-width: 95vw; max-height: 90vh; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; font-family: system-ui; color: #000; }
             .qip-modal-header { padding: 15px 20px; border-bottom: 1px solid #eee; font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; }
@@ -219,36 +256,28 @@
 
             .btn-save { background: #0052cc; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
             .btn-cancel { background: #f4f5f7; border: 1px solid #ccc; padding: 8px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px; font-size: 14px; }
-
-            /* 禁用状态样式 */
             .disabled-group { opacity: 0.5; pointer-events: none; }
         `;
         document.head.appendChild(styleElement);
     }
 
-    // ================= 环境检查 =================
-    const currentHost = window.location.hostname;
-    const isAllowed = isHostAllowed(currentHost, config.whiteList);
-
-    GM_registerMenuCommand("⚙️ 打开快捷输入设置", () => createSettingsModal(config));
-    if (!isAllowed) return;
-
     // ================= 核心逻辑 =================
-
-    document.addEventListener('focusin', (e) => {
-        const el = e.target;
-        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) {
-            targetElement = el;
-            updateStatus(`目标: ${el.id || el.name || el.tagName}`);
-        }
-    }, true);
 
     function insertText(element, text) {
         element.focus();
         const success = document.execCommand('insertText', false, text);
 
         if (success) {
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            element.dispatchEvent(new Event('change', { bubbles: true }));
             updateStatus('✅ 已输入', true);
+
+            if (config.autoEnter) {
+                setTimeout(() => {
+                    simulateEnterKey(element);
+                    updateStatus('✅ 已发送', true);
+                }, 50);
+            }
             return;
         }
 
@@ -274,6 +303,13 @@
             element.setSelectionRange(newCursorPos, newCursorPos);
 
             updateStatus('✅ 已输入 (兼容模式)', true);
+
+            if (config.autoEnter) {
+                setTimeout(() => {
+                    simulateEnterKey(element);
+                    updateStatus('✅ 已发送', true);
+                }, 50);
+            }
             return;
         }
 
@@ -290,10 +326,29 @@
                 selection.addRange(range);
             }
             updateStatus('✅ 已输入 (富文本)', true);
+
+            if (config.autoEnter) {
+                setTimeout(() => {
+                    simulateEnterKey(element);
+                    updateStatus('✅ 已发送', true);
+                }, 50);
+            }
             return;
         }
 
         updateStatus('⚠️ 输入失败', true);
+    }
+
+    function simulateEnterKey(element) {
+        const enterEvent = new KeyboardEvent('keydown', {
+            bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13, which: 13
+        });
+        element.dispatchEvent(enterEvent);
+
+        const enterEventUp = new KeyboardEvent('keyup', {
+            bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13, which: 13
+        });
+        element.dispatchEvent(enterEventUp);
     }
 
     function updateStatus(msg, isTemp = false) {
@@ -301,7 +356,7 @@
         const status = panelInstance.querySelector('.qip-status');
         if (status) {
             status.textContent = msg;
-            if (isTemp) setTimeout(() => { if(status.textContent.includes('已输入')) status.textContent = "等待操作..."; }, 2000);
+            if (isTemp) setTimeout(() => { if(status.textContent.includes('已输入') || status.textContent.includes('已发送')) status.textContent = "等待操作..."; }, 2000);
         }
     }
 
@@ -361,13 +416,11 @@
 
         div.innerHTML = isReverse ? (bodyHtml + headerHtml) : (headerHtml + bodyHtml);
 
-        // --- 交互状态变量 ---
         let isDragging = false, isResizing = false, resizeDir = '';
         let isInteracting = false;
         let autoCollapseTimer = null;
         let startX, startY, startLeft, startTop, startW, startH;
 
-        // --- 核心动画函数 ---
         function animatePanel(shouldCollapse) {
             const header = div.querySelector('.qip-header');
             const pos = cfg.headerPosition;
@@ -440,13 +493,11 @@
             }
         }
 
-        // --- 手动折叠按钮 ---
         div.querySelector('#qip-toggle').onclick = (e) => {
             const isCurrentlyCollapsed = div.classList.contains('is-collapsed');
             animatePanel(!isCurrentlyCollapsed);
         };
 
-        // --- 拖拽与缩放逻辑 ---
         div.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
             const target = e.target;
@@ -458,11 +509,12 @@
             if (target.classList.contains('qip-resize')) {
                 isResizing = true; resizeDir = target.dataset.dir;
                 document.body.style.cursor = getComputedStyle(target).cursor;
-                div.style.transition = 'none';
+                div.style.transition = 'none'; // 禁用动画
                 isInteracting = true;
             } else if (target.closest('.qip-header') && !target.closest('button')) {
                 isDragging = true;
                 document.body.style.cursor = 'move';
+                div.style.transition = 'none'; // 【关键修复】拖拽时禁用动画，防止延迟
                 isInteracting = true;
             } else { return; }
 
@@ -495,19 +547,24 @@
 
             if (isDragging || isResizing) {
                 const rect = div.getBoundingClientRect();
-                cfg.position.left = rect.left; cfg.position.top = rect.top;
+                cfg.position.left = rect.left;
+                cfg.position.top = rect.top;
                 cfg.style.width = rect.width;
                 if (!div.classList.contains('is-collapsed')) {
                     cfg.style.height = rect.height;
                 }
-                saveConfig(cfg);
+                saveSiteLayout({
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: cfg.style.height
+                });
             }
-            div.style.transition = '';
+            div.style.transition = ''; // 恢复动画
             isDragging = false; isResizing = false;
             isInteracting = false;
         }
 
-        // --- 自动折叠逻辑 ---
         div.addEventListener('mouseenter', () => {
             if (!cfg.autoCollapse) return;
             clearTimeout(autoCollapseTimer);
@@ -520,7 +577,6 @@
             if (!cfg.autoCollapse) return;
             clearTimeout(autoCollapseTimer);
             if (!isInteracting && !div.classList.contains('is-collapsed')) {
-                // 使用配置中的延迟时间
                 const delay = (typeof cfg.autoCollapseDelay === 'number') ? cfg.autoCollapseDelay : 300;
                 autoCollapseTimer = setTimeout(() => {
                     if (!isInteracting) animatePanel(true);
@@ -528,7 +584,6 @@
             }
         });
 
-        // 按钮点击事件
         div.querySelector('#qip-settings').onclick = (e) => { e.stopPropagation(); createSettingsModal(cfg); };
         div.querySelector('.qip-body').onclick = (e) => {
             const btn = e.target.closest('.qip-btn');
@@ -569,15 +624,18 @@
                         </div>
                     </div>
 
-                    <!-- 自动折叠设置区域 -->
                     <div class="form-group" style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">
                         <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
                             <input type="checkbox" id="cfg-autoCollapse" ${currentCfg.autoCollapse ? 'checked' : ''}>
                             <span style="font-size:13px; font-weight:bold">鼠标离开自动收起</span>
                         </div>
-                        <div class="form-group" id="delay-group" style="margin-bottom:0; margin-left:25px; ${currentCfg.autoCollapse ? '' : 'opacity:0.5; pointer-events:none;'}">
+                        <div class="form-group" id="delay-group" style="margin-bottom:10px; margin-left:25px; ${currentCfg.autoCollapse ? '' : 'opacity:0.5; pointer-events:none;'}">
                             <label style="font-size:12px; color:#555;">延迟收起时间 (毫秒)</label>
                             <input type="number" id="cfg-autoCollapseDelay" value="${currentCfg.autoCollapseDelay || 300}" placeholder="300">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px; border-top:1px solid #e0e0e0; padding-top:10px;">
+                            <input type="checkbox" id="cfg-autoEnter" ${currentCfg.autoEnter ? 'checked' : ''}>
+                            <span style="font-size:13px; font-weight:bold">输入后自动发送 (模拟回车)</span>
                         </div>
                     </div>
 
@@ -659,14 +717,12 @@
         document.getElementById('modal-close').onclick = close;
         document.getElementById('modal-cancel').onclick = close;
 
-        // 联动逻辑：全站运行
         document.getElementById('cfg-runAll').onchange = (e) => {
             const group = document.getElementById('whitelist-group');
             group.style.opacity = e.target.checked ? '0.5' : '1';
             group.style.pointerEvents = e.target.checked ? 'none' : 'auto';
         };
 
-        // 联动逻辑：自动折叠开关
         document.getElementById('cfg-autoCollapse').onchange = (e) => {
             const group = document.getElementById('delay-group');
             if (e.target.checked) {
@@ -679,7 +735,7 @@
         };
 
         document.getElementById('cfg-reset').onclick = () => {
-            if(confirm("确定要重置所有设置吗？位置、大小、颜色都将恢复默认。")){
+            if(confirm("确定要重置所有设置吗？位置、大小、颜色都将恢复默认。\n注意：这会重置所有网站的全局设置，但不会清除各网站的独立位置记录。")){
                 GM_setValue('quick_input_config', DEFAULT_CONFIG);
                 alert('重置成功！即将刷新页面。');
                 window.location.reload();
@@ -704,9 +760,9 @@
                 currentCfg.runOnAllSites = document.getElementById('cfg-runAll').checked;
                 currentCfg.autoCollapse = document.getElementById('cfg-autoCollapse').checked;
 
-                // 保存延迟时间
                 const delayVal = parseInt(document.getElementById('cfg-autoCollapseDelay').value);
                 currentCfg.autoCollapseDelay = isNaN(delayVal) ? 300 : delayVal;
+                currentCfg.autoEnter = document.getElementById('cfg-autoEnter').checked;
 
                 currentCfg.whiteList = document.getElementById('cfg-whitelist').value.split('\n').map(s => s.trim()).filter(s => s);
                 currentCfg.phrases = newPhrases;
@@ -731,7 +787,14 @@
                 currentCfg.style.btnBgColor = document.getElementById('cfg-btnBg').value;
                 currentCfg.style.btnTextColor = document.getElementById('cfg-btnText').value;
 
-                saveConfig(currentCfg);
+                saveGlobalConfig(currentCfg);
+                saveSiteLayout({
+                    left: currentCfg.position.left,
+                    top: currentCfg.position.top,
+                    width: currentCfg.style.width,
+                    height: currentCfg.style.height
+                });
+
                 config = currentCfg;
                 injectStyles();
                 panelInstance = createPanel(config);
@@ -742,8 +805,51 @@
         };
     }
 
-    // ================= 启动 =================
-    injectStyles();
-    panelInstance = createPanel(config);
+    // ================= 初始化逻辑 =================
+    function initScript() {
+        if (isInitialized) return;
+        isInitialized = true;
+
+        injectStyles();
+        panelInstance = createPanel(config);
+
+        document.addEventListener('focusin', (e) => {
+            const el = e.target;
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) {
+                targetElement = el;
+                updateStatus(`目标: ${el.id || el.name || el.tagName}`);
+            }
+        }, true);
+    }
+
+    // ================= 菜单注册 =================
+    GM_registerMenuCommand("⚙️ 打开快捷输入设置", () => {
+        if (!isInitialized) initScript();
+        createSettingsModal(config);
+    });
+
+    GM_registerMenuCommand("➕ 将当前网站加入白名单", () => {
+        if (config.runOnAllSites) {
+            alert('当前已开启“在所有网站运行”模式，无需添加白名单。');
+            return;
+        }
+        if (config.whiteList.includes(currentHost)) {
+            alert(`${currentHost} 已在白名单中。`);
+            return;
+        }
+
+        config.whiteList.push(currentHost);
+        saveGlobalConfig(config);
+        alert(`已将 ${currentHost} 加入白名单，插件已激活！`);
+
+        if (!isInitialized) {
+            initScript();
+        }
+    });
+
+    // ================= 启动检查 =================
+    if (isHostAllowed(currentHost, config.whiteList)) {
+        initScript();
+    }
 
 })();
